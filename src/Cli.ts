@@ -2,6 +2,7 @@ import yargs from "yargs";
 import fs, {WriteStream} from "fs";
 import {OutputFormat} from "./OutputFormat";
 import {IonTypes, makeTextWriter} from "./Ion";
+import {ComparisonContext, ComparisonType} from "./Compare";
 
 /** common CLI arguments structure */
 export class IonCliCommonArgs {
@@ -32,6 +33,20 @@ export class IonCliCommonArgs {
 
     getOutputFormatName(): OutputFormat {
         return this.outputFormatName;
+    }
+}
+
+/** CLI arguments for compare structure */
+export class IonCompareArgs extends IonCliCommonArgs{
+    comparisonType : ComparisonType;
+
+    constructor(props) {
+        super(props);
+        this.comparisonType = props["comparison-type"] as ComparisonType;
+    }
+
+    getComparisonType(): ComparisonType {
+        return this.comparisonType;
     }
 }
 
@@ -72,6 +87,41 @@ export class IonCliError {
         writer.stepOut();
         this.errorReportFile.write(writer.getBytes());
         this.errorReportFile.write("\n");
+    }
+}
+
+/** Comparison result types for the comparison report */
+export enum ComparisonResultType {
+    EQUAL = "EQUAL",
+    NOT_EQUAL = "NOT_EQUAL",
+    ERROR = "ERROR"
+}
+
+export class IonComparisonReport {
+    result: ComparisonResultType;
+    lhs: ComparisonContext;
+    rhs: ComparisonContext;
+    message: string;
+
+    constructor(result: ComparisonResultType, lhs: ComparisonContext, rhs: ComparisonContext, message: string) {
+        this.result = result;
+        this.lhs = lhs;
+        this.rhs = rhs;
+        this.message = message;
+    }
+
+    writeErrorReport(comparisonReportFile: WriteStream| NodeJS.WriteStream, event_index) {
+        let writer = makeTextWriter();
+        writer.stepIn(IonTypes.STRUCT);
+        writer.writeFieldName('result');
+        writer.writeSymbol(this.result);
+        this.lhs.writeComparisonContext(writer, true, event_index);
+        this.rhs.writeComparisonContext(writer, false, event_index);
+        writer.writeFieldName('message');
+        writer.writeString(this.message);
+        writer.stepOut();
+        comparisonReportFile.write(writer.getBytes());
+        comparisonReportFile.write("\n");
     }
 }
 

@@ -21,7 +21,15 @@ import {IonTypes} from "./IonTypes";
 import {defaultLocalSymbolTable, makeReader, ReaderOctetBuffer} from "./Ion";
 import {BinaryReader} from "./IonBinaryReader";
 import {BinarySpan} from "./IonSpan";
-import {ErrorType, IonCliCommonArgs, IonCliError} from "./Cli";
+import {
+    ComparisonResultType,
+    ErrorType,
+    IonCliCommonArgs,
+    IonCliError,
+    IonCompareArgs,
+    IonComparisonReport
+} from "./Cli";
+import {ComparisonContext} from "./Compare";
 
 export class IonEventStream {
     private eventStream: IonEvent[];
@@ -119,7 +127,7 @@ export class IonEventStream {
         return this.eventStream;
     }
 
-    equals(expected: IonEventStream) {
+    equals(expected: IonEventStream, lhs: ComparisonContext, rhs: ComparisonContext, args: IonCompareArgs) {
         let actualIndex: number = 0;
         let expectedIndex: number = 0;
         while (actualIndex < this.eventStream.length && expectedIndex < expected.eventStream.length) {
@@ -130,7 +138,10 @@ export class IonEventStream {
             if (actualEvent.eventType === IonEventType.SYMBOL_TABLE || expectedEvent.eventType === IonEventType.SYMBOL_TABLE) continue;
             switch (actualEvent.eventType) {
                 case IonEventType.SCALAR: {
-                    if (!actualEvent.equals(expectedEvent)) return false;
+                    if (!actualEvent.equals(expectedEvent)) {
+                        new IonComparisonReport(ComparisonResultType.NOT_EQUAL, lhs, rhs, actualEvent.ionValue + " vs. " + expectedEvent.ionValue).writeErrorReport(args.getOutputFile(), actualIndex);
+                        return false;
+                    }
                     break;
                 }
                 case IonEventType.CONTAINER_START: {
