@@ -2,7 +2,7 @@ import fs from 'fs';
 import {OutputFormat} from './OutputFormat';
 import {IonEventStream} from "./IonEventStream";
 import {Writer} from "./IonWriter";
-import {ErrorType, IonCliError, IonCompareArgs} from "./Cli";
+import {ErrorType, IonCliError, IonCompareArgs, IonComparisonReport} from "./Cli";
 import {IonTypes, makeReader, Reader} from "./Ion";
 
 /**
@@ -18,7 +18,7 @@ export const builder = {
     'comparison-type': {
         alias: "y",
         default: 'basic',
-        choices: ['basic', 'equivs', 'non-equivs', 'equivs_timeline'],
+        choices: ['basic', 'equivs', 'non-equivs', 'equiv-timeline'],
         describe: "Comparison semantics to be used with the compare command, from the set (basic | equivs | non-equivs |" +
             "equiv-timeline). Any embedded streams in the inputs are compared for EventStream equality. 'basic' performs" +
             "a standard data-model comparison between the corresponding events (or embedded streams) in the inputs." +
@@ -83,20 +83,18 @@ export class ComparisonContext {
         return this.location;
     }
 
-    writeComparisonContext(ionOutputWriter: Writer, isLHS: boolean, event_index: number) {
-        let field_name: string = isLHS ? "lhs" : "rhs";
+    writeComparisonContext(ionOutputWriter: Writer, field_name: string, event_index: number) {
         ionOutputWriter.writeFieldName(field_name);
         ionOutputWriter.stepIn(IonTypes.STRUCT);
         ionOutputWriter.writeFieldName("location");
         ionOutputWriter.writeString(this.location);
         ionOutputWriter.writeFieldName("event");
         this.getEventStream().getEvents()[event_index].write(ionOutputWriter);
-        ionOutputWriter.stepOut();
         ionOutputWriter.writeFieldName("event_index");
         ionOutputWriter.writeInt(event_index);
+        ionOutputWriter.stepOut();
     }
 }
-
 
 /**
  * Compare all inputs (which may contain Ion streams and/or EventStreams) against all other inputs
@@ -107,18 +105,18 @@ export class Compare {
     constructor(parsedArgs: IonCompareArgs) {
         let output_writer = OutputFormat.createIonWriter(parsedArgs.getOutputFormatName());
         if (output_writer) {
-                this.compareFiles(output_writer, parsedArgs);
+            this.compareFiles(output_writer, parsedArgs);
         }
     }
 
     compareFiles(ionOutputWriter: Writer, args: IonCompareArgs): void {
         for (let pathFirst of args.getInputFiles()) {
             for(let pathSecond of args.getInputFiles()) {
-                if(pathFirst === pathSecond) {
-                    continue;
-                }
                 let comparisonType = args.getComparisonType();
                 if(comparisonType == ComparisonType.BASIC) {
+                    if(pathFirst === pathSecond) {
+                        continue;
+                    }
                     this.compareFilePair(ionOutputWriter, pathFirst, pathSecond, args);
                 }
             }
@@ -129,6 +127,7 @@ export class Compare {
         let lhs = new ComparisonContext(pathFirst, args);
         let rhs = new ComparisonContext(pathSecond, args);
         ionOutputWriter.close();
-        lhs.getEventStream().equals(rhs.getEventStream(), lhs, rhs, args);
+        let comparisonReport = new IonComparisonReport(lhs, rhs, args.getOutputFile());
+        lhs.getEventStream().compare(rhs.getEventStream(), comparisonReport);
     }
 }

@@ -22,14 +22,13 @@ import {defaultLocalSymbolTable, makeReader, ReaderOctetBuffer} from "./Ion";
 import {BinaryReader} from "./IonBinaryReader";
 import {BinarySpan} from "./IonSpan";
 import {
+    ComparisonResult,
     ComparisonResultType,
     ErrorType,
     IonCliCommonArgs,
     IonCliError,
-    IonCompareArgs,
     IonComparisonReport
 } from "./Cli";
-import {ComparisonContext} from "./Compare";
 
 export class IonEventStream {
     private eventStream: IonEvent[];
@@ -127,7 +126,16 @@ export class IonEventStream {
         return this.eventStream;
     }
 
-    equals(expected: IonEventStream, lhs: ComparisonContext, rhs: ComparisonContext, args: IonCompareArgs) {
+    equals(expected: IonEventStream): boolean {
+        return this.compare(expected).result == ComparisonResultType.EQUAL;
+    }
+
+    /**
+     *  compares eventstreams and generates comparison result
+     *
+     *  @param comparisonReport: optional argument to write a comparison report for the equivalence result
+     */
+    compare(expected: IonEventStream, comparisonReport?: IonComparisonReport): ComparisonResult {
         let actualIndex: number = 0;
         let expectedIndex: number = 0;
         while (actualIndex < this.eventStream.length && expectedIndex < expected.eventStream.length) {
@@ -138,18 +146,25 @@ export class IonEventStream {
             if (actualEvent.eventType === IonEventType.SYMBOL_TABLE || expectedEvent.eventType === IonEventType.SYMBOL_TABLE) continue;
             switch (actualEvent.eventType) {
                 case IonEventType.SCALAR: {
-                    if (!actualEvent.equals(expectedEvent)) {
-                        new IonComparisonReport(ComparisonResultType.NOT_EQUAL, lhs, rhs, actualEvent.ionValue + " vs. " + expectedEvent.ionValue).writeErrorReport(args.getOutputFile(), actualIndex);
-                        return false;
+                    let eventResult = actualEvent.compare(expectedEvent);
+                    if (eventResult.result == ComparisonResultType.NOT_EQUAL) {
+                        if(comparisonReport)
+                            comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, actualIndex, expectedIndex);
+                        return eventResult;
                     }
                     break;
                 }
                 case IonEventType.CONTAINER_START: {
-                    if (actualEvent.equals(expectedEvent)) {
+                    let eventResult = actualEvent.compare(expectedEvent);
+                    if (eventResult.result == ComparisonResultType.NOT_EQUAL) {
+                        actualIndex += eventResult.actualIndex;
+                        expectedIndex += eventResult.expectedIndex;
+                        if(comparisonReport)
+                            comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, actualIndex, expectedIndex);
+                        return eventResult;
+                    } else {
                         actualIndex = actualIndex + actualEvent.ionValue.length;
                         expectedIndex = expectedIndex + expectedEvent.ionValue.length;
-                    } else {
-                        return false;
                     }
                     break;
                 }
@@ -159,13 +174,19 @@ export class IonEventStream {
                     break;
                 }
                 default: {
-                    throw new Error("Unexpected event type: " + actualEvent.eventType);
+                    let message = "Unexpected event type: " + actualEvent.eventType;
+                    if(comparisonReport) {
+                        comparisonReport.writeComparisonReport(ComparisonResultType.ERROR,
+                            message, actualIndex, expectedIndex);
+                    } else {
+                        throw new Error(message);
+                    }
                 }
             }
             actualIndex++;
             expectedIndex++;
         }
-        return true;
+        return new ComparisonResult(ComparisonResultType.EQUAL);
     }
 
     private generateStream(path: string, args: IonCliCommonArgs): void {

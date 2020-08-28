@@ -97,31 +97,44 @@ export enum ComparisonResultType {
     ERROR = "ERROR"
 }
 
-export class IonComparisonReport {
+/** comparison result with event index and message **/
+export class ComparisonResult {
+    message: string;
     result: ComparisonResultType;
+    actualIndex: number;
+    expectedIndex: number;
+
+    constructor(result: ComparisonResultType, message: string = "", actualIndex: number = 0, expectedIndex: number = 0) {
+        this.result = result;
+        this.message = message;
+        this.actualIndex = actualIndex;
+        this.expectedIndex = expectedIndex;
+    }
+}
+
+export class IonComparisonReport {
     lhs: ComparisonContext;
     rhs: ComparisonContext;
-    message: string;
+    comparisonReportFile: WriteStream| NodeJS.WriteStream;
 
-    constructor(result: ComparisonResultType, lhs: ComparisonContext, rhs: ComparisonContext, message: string) {
-        this.result = result;
+    constructor(lhs: ComparisonContext, rhs: ComparisonContext, comparisonReportFile: WriteStream| NodeJS.WriteStream) {
         this.lhs = lhs;
         this.rhs = rhs;
-        this.message = message;
+        this.comparisonReportFile = comparisonReportFile;
     }
 
-    writeErrorReport(comparisonReportFile: WriteStream| NodeJS.WriteStream, event_index) {
+    writeComparisonReport(result: ComparisonResultType, message: string, event_index_lhs: number, event_index_rhs: number) {
         let writer = makeTextWriter();
         writer.stepIn(IonTypes.STRUCT);
         writer.writeFieldName('result');
-        writer.writeSymbol(this.result);
-        this.lhs.writeComparisonContext(writer, true, event_index);
-        this.rhs.writeComparisonContext(writer, false, event_index);
+        writer.writeSymbol(result);
+        this.lhs.writeComparisonContext(writer, "lhs", event_index_lhs);
+        this.rhs.writeComparisonContext(writer, "rhs", event_index_rhs);
         writer.writeFieldName('message');
-        writer.writeString(this.message);
+        writer.writeString(message);
         writer.stepOut();
-        comparisonReportFile.write(writer.getBytes());
-        comparisonReportFile.write("\n");
+        this.comparisonReportFile.write(writer.getBytes());
+        this.comparisonReportFile.write("\n");
     }
 }
 
