@@ -545,8 +545,9 @@ class IonSexpEvent extends AbsIonContainerEvent {
         if (container.length !== expectedContainer.length) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "S-expression length don't match");
         for (let i: number = 0; i < container.length; i++) {
             let child = container[i];
-            if (child.compare(expectedContainer[i]).result == ComparisonResultType.NOT_EQUAL) {
-                return child.compare(expectedContainer[i]);
+            let eventResult = child.compare(expectedContainer[i]).result;
+            if (eventResult == ComparisonResultType.NOT_EQUAL) {
+                return eventResult;
             } else if (child.eventType === IonEventType.CONTAINER_START) {
                 i += child.ionValue.length;
             }
