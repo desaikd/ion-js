@@ -29,6 +29,7 @@ import {
     IonCliError,
     IonComparisonReport
 } from "./Cli";
+import {ComparisonType} from "./Compare";
 
 export class IonEventStream {
     private eventStream: IonEvent[];
@@ -187,6 +188,67 @@ export class IonEventStream {
             expectedIndex++;
         }
         return new ComparisonResult(ComparisonResultType.EQUAL);
+    }
+
+    compareEquivs(expected: IonEventStream, comparisonReport: IonComparisonReport): ComparisonResult {
+        let actualIndex: number = 0;
+        let expectedIndex: number = 0;
+        let comparisonType = comparisonReport.comparisonType;
+        while (actualIndex < this.eventStream.length && expectedIndex < expected.eventStream.length) {
+            let actualEvent = this.eventStream[actualIndex];
+            let expectedEvent = expected.eventStream[expectedIndex];
+
+            if(actualEvent.eventType == IonEventType.STREAM_END && expectedEvent.eventType == IonEventType.STREAM_END) {
+                break;
+            } else if(actualEvent.eventType == IonEventType.STREAM_END || expectedEvent.eventType == IonEventType.STREAM_END) {
+                comparisonReport.writeComparisonReport(ComparisonResultType.ERROR,
+                    "Different number of comparison sets.", actualIndex, expectedIndex);
+                return new ComparisonResult(ComparisonResultType.ERROR);
+            } else if (!(actualEvent.ionType == IonTypes.LIST || actualEvent.ionType == IonTypes.SEXP)
+                || !(expectedEvent.ionType == IonTypes.LIST || expectedEvent.ionType == IonTypes.SEXP)) {
+                throw new Error("Comparison sets must be lists or s-expressions.");
+            } else if(this.isEmbedded as any ^ expected.isEmbedded as any) {
+                throw new Error("Both streams should be embedded streams.");
+            }
+
+            let actualContainer: IonEvent[];
+            let expectedContainer: IonEvent[];
+
+            actualContainer = this.eventStream[actualIndex].ionValue;
+            expectedContainer = expected.eventStream[expectedIndex].ionValue;
+
+            actualIndex = actualIndex + actualEvent.ionValue.length;
+            expectedIndex = expectedIndex + expectedEvent.ionValue.length;
+
+            for (let i = 0; i < actualContainer.length; i++) {
+                for (let j = 0; j < expectedContainer.length; j++) {
+                    // for non-equivs: not comparing same index's value as it will always be same.
+                    if (comparisonType == ComparisonType.NON_EQUIVS && i == j)
+                        continue;
+                    let actualContainerEvent: IonEvent = actualContainer[i];
+                    let expectedContainerEvent: IonEvent = expectedContainer[j];
+                    if(actualContainerEvent.eventType == IonEventType.STREAM_END || actualContainerEvent.eventType == IonEventType.CONTAINER_END) {
+                        // no op
+                        break;
+                    }
+                    if (expectedContainerEvent.eventType == IonEventType.STREAM_END || expectedContainerEvent.eventType == IonEventType.CONTAINER_END) {
+                        // no op
+                        continue;
+                    }
+                    let eventResult = actualContainerEvent.compare(expectedContainerEvent);
+                    if (comparisonType == ComparisonType.EQUIVS && eventResult.result == ComparisonResultType.NOT_EQUAL) {
+                        comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, i + 1, j + 1);
+                        return new ComparisonResult(ComparisonResultType.NOT_EQUAL);
+                    } else if (comparisonType == ComparisonType.NON_EQUIVS && eventResult.result == ComparisonResultType.EQUAL) {
+                        comparisonReport.writeComparisonReport(ComparisonResultType.EQUAL, "Both values are equal in non-equivs comparison.", i + 1, j + 1);
+                        return new ComparisonResult(ComparisonResultType.EQUAL);
+                    }
+                }
+            }
+            actualIndex++;
+            expectedIndex++;
+        }
+        return new ComparisonResult(comparisonType == ComparisonType.EQUIVS ? ComparisonResultType.EQUAL : ComparisonResultType.NOT_EQUAL);
     }
 
     private generateStream(path: string, args: IonCliCommonArgs): void {

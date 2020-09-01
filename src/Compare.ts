@@ -39,8 +39,8 @@ export const handler = function (argv) {
 export enum ComparisonType {
     BASIC = "basic",
     EQUIVS = "equivs",
-    NON_EQUIVS ="non_equivs",
-    EQUIVS_TIMELINE = "equivs_timeline"
+    NON_EQUIVS ="non-equivs",
+    EQUIVS_TIMELINE = "equivs-timeline"
 }
 
 /**
@@ -113,12 +113,10 @@ export class Compare {
         for (let pathFirst of args.getInputFiles()) {
             for(let pathSecond of args.getInputFiles()) {
                 let comparisonType = args.getComparisonType();
-                if(comparisonType == ComparisonType.BASIC) {
-                    if(pathFirst === pathSecond) {
+                if(comparisonType == ComparisonType.BASIC && pathFirst === pathSecond) {
                         continue;
-                    }
-                    this.compareFilePair(ionOutputWriter, pathFirst, pathSecond, args);
                 }
+                this.compareFilePair(ionOutputWriter, pathFirst, pathSecond, args);
             }
         }
     }
@@ -127,7 +125,14 @@ export class Compare {
         let lhs = new ComparisonContext(pathFirst, args);
         let rhs = new ComparisonContext(pathSecond, args);
         ionOutputWriter.close();
-        let comparisonReport = new IonComparisonReport(lhs, rhs, args.getOutputFile());
-        lhs.getEventStream().compare(rhs.getEventStream(), comparisonReport);
+        let comparisonType = args.getComparisonType();
+        let comparisonReport = new IonComparisonReport(lhs, rhs, args.getOutputFile(), comparisonType);
+        if(comparisonType == ComparisonType.BASIC) {
+            lhs.getEventStream().compare(rhs.getEventStream(), comparisonReport);
+        }
+        else if(comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIVS_TIMELINE
+            || comparisonType == ComparisonType.NON_EQUIVS) {
+            lhs.getEventStream().compareEquivs(rhs.getEventStream(), comparisonReport);
+        }
     }
 }
