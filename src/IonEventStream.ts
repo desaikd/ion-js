@@ -236,15 +236,16 @@ export class IonEventStream {
                     let eventResult;
 
                     if (comparisonType == ComparisonType.EQUIV_TIMELINE && actualContainerEvent.ionType == IonTypes.TIMESTAMP) {
-                        let ionTimestampFirst = actualContainerEvent.ionValue;
-                        let ionTimestampSecond = expectedContainerEvent.ionValue;
-                        eventResult = ionTimestampFirst.equals(ionTimestampSecond) ? new ComparisonResult(ComparisonResultType.EQUAL)
-                            : new ComparisonResult(ComparisonResultType.NOT_EQUAL);
+                        let ionTimestampActual = actualContainerEvent.ionValue;
+                        let ionTimestampExpected = expectedContainerEvent.ionValue;
+                        eventResult = ionTimestampActual.compareTo(ionTimestampExpected) == 0 ? new ComparisonResult(ComparisonResultType.EQUAL)
+                            : new ComparisonResult(ComparisonResultType.NOT_EQUAL, ionTimestampActual + " vs. " + ionTimestampExpected);
                     } else {
                          eventResult = actualContainerEvent.compare(expectedContainerEvent);
                     }
 
-                    if (comparisonType == ComparisonType.EQUIVS && eventResult.result == ComparisonResultType.NOT_EQUAL) {
+                    if ((comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIV_TIMELINE)
+                        && eventResult.result == ComparisonResultType.NOT_EQUAL) {
                         comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, i + 1, j + 1);
                         return new ComparisonResult(ComparisonResultType.NOT_EQUAL);
                     } else if (comparisonType == ComparisonType.NON_EQUIVS && eventResult.result == ComparisonResultType.EQUAL) {
