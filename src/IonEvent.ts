@@ -178,7 +178,8 @@ abstract class AbstractIonEvent implements IonEvent {
             return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Event types don't match");
         }
         if(this.ionType !== expected.ionType) {
-            return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Ion types don't match");
+            return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Ion types don't match "
+                + this.ionType?.name + " vs. " + expected.ionType?.name);
         }
         if(this.fieldName !== expected.fieldName) {
             return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Field names don't match "

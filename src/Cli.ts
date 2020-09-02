@@ -116,11 +116,13 @@ export class IonComparisonReport {
     lhs: ComparisonContext;
     rhs: ComparisonContext;
     comparisonReportFile: WriteStream| NodeJS.WriteStream;
+    comparisonType: ComparisonType;
 
-    constructor(lhs: ComparisonContext, rhs: ComparisonContext, comparisonReportFile: WriteStream| NodeJS.WriteStream) {
+    constructor(lhs: ComparisonContext, rhs: ComparisonContext, comparisonReportFile: WriteStream| NodeJS.WriteStream, comprisonType: ComparisonType) {
         this.lhs = lhs;
         this.rhs = rhs;
         this.comparisonReportFile = comparisonReportFile;
+        this.comparisonType = comprisonType;
     }
 
     writeComparisonReport(result: ComparisonResultType, message: string, event_index_lhs: number, event_index_rhs: number) {
