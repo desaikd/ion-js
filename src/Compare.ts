@@ -40,7 +40,7 @@ export enum ComparisonType {
     BASIC = "basic",
     EQUIVS = "equivs",
     NON_EQUIVS ="non-equivs",
-    EQUIVS_TIMELINE = "equivs-timeline"
+    EQUIV_TIMELINE = "equiv-timeline"
 }
 
 /**
@@ -130,7 +130,7 @@ export class Compare {
         if(comparisonType == ComparisonType.BASIC) {
             lhs.getEventStream().compare(rhs.getEventStream(), comparisonReport);
         }
-        else if(comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIVS_TIMELINE
+        else if(comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIV_TIMELINE
             || comparisonType == ComparisonType.NON_EQUIVS) {
             lhs.getEventStream().compareEquivs(rhs.getEventStream(), comparisonReport);
         }

@@ -211,11 +211,8 @@ export class IonEventStream {
                 throw new Error("Both streams should be embedded streams.");
             }
 
-            let actualContainer: IonEvent[];
-            let expectedContainer: IonEvent[];
-
-            actualContainer = this.eventStream[actualIndex].ionValue;
-            expectedContainer = expected.eventStream[expectedIndex].ionValue;
+            let actualContainer: IonEvent[] = this.eventStream[actualIndex].ionValue;
+            let expectedContainer: IonEvent[] = expected.eventStream[expectedIndex].ionValue;
 
             actualIndex = actualIndex + actualEvent.ionValue.length;
             expectedIndex = expectedIndex + expectedEvent.ionValue.length;
@@ -235,7 +232,18 @@ export class IonEventStream {
                         // no op
                         continue;
                     }
-                    let eventResult = actualContainerEvent.compare(expectedContainerEvent);
+
+                    let eventResult;
+
+                    if (comparisonType == ComparisonType.EQUIV_TIMELINE && actualContainerEvent.ionType == IonTypes.TIMESTAMP) {
+                        let ionTimestampFirst = actualContainerEvent.ionValue;
+                        let ionTimestampSecond = expectedContainerEvent.ionValue;
+                        eventResult = ionTimestampFirst.equals(ionTimestampSecond) ? new ComparisonResult(ComparisonResultType.EQUAL)
+                            : new ComparisonResult(ComparisonResultType.NOT_EQUAL);
+                    } else {
+                         eventResult = actualContainerEvent.compare(expectedContainerEvent);
+                    }
+
                     if (comparisonType == ComparisonType.EQUIVS && eventResult.result == ComparisonResultType.NOT_EQUAL) {
                         comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, i + 1, j + 1);
                         return new ComparisonResult(ComparisonResultType.NOT_EQUAL);
