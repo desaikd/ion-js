@@ -1,10 +1,26 @@
+/*!
+ * Copyright 2012 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 import fs from 'fs';
 import {OutputFormat} from './OutputFormat';
-import {IonEventStream} from "./IonEventStream";
-import {Writer} from "./IonWriter";
-import {ErrorType, IonCliCommonArgs, IonCliError} from "./Cli";
-import {IonTypes, makeReader, Reader} from "./Ion";
-import {IonEvent} from "./IonEvent";
+import {IonEventStream} from "ion-js";
+import {Writer} from "ion-js";
+import {IonTypes, makeReader, Reader} from "ion-js";
+import {IonEvent} from "ion-js";
+import {ErrorType, IonCliError} from "./CliError";
+import {IonCliCommonArgs} from "./CliCommonArgs";
 
 /**
  * The `command`, `describe`, and `handler` exports below are part of the yargs command module API
@@ -75,7 +91,7 @@ export class Process {
     writeToEventStream(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
         let eventStream;
         try {
-            eventStream = new IonEventStream(ionReader, path, args);
+            eventStream = new IonEventStream(ionReader);
 
             ionOutputWriter.writeSymbol(this.EVENT_STREAM);
             let writeEvents: IonEvent[] = [];
@@ -94,7 +110,15 @@ export class Process {
 
             ionOutputWriter.close();
         } catch (Error) {
-            new IonCliError(ErrorType.WRITE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            if(Error.message.search("READ") != -1) {
+                new IonCliError(ErrorType.READ, path, Error.message, args.getErrorReportFile(), eventStream.getEvents().length).writeErrorReport();
+            }
+            else if(Error.message.search("WRITE") != -1) {
+                new IonCliError(ErrorType.WRITE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            }
+            else {
+                new IonCliError(ErrorType.STATE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            }
         }
     }
 
@@ -131,11 +155,20 @@ export class Process {
     }
 
     writeToProcessFileFromEventStream(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
+        let eventStream;
         try {
-            let eventStream = new IonEventStream(ionReader, path, args);
+            eventStream = new IonEventStream(ionReader);
             eventStream.writeIon(ionOutputWriter);
         } catch (Error) {
-            new IonCliError(ErrorType.WRITE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            if(Error.message.search("READ") != -1) {
+                new IonCliError(ErrorType.READ, path, Error.message, args.getErrorReportFile(), eventStream.getEvents().length).writeErrorReport();
+            }
+            else if(Error.message.search("WRITE") != -1) {
+                new IonCliError(ErrorType.WRITE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            }
+            else {
+                new IonCliError(ErrorType.STATE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            }
         }
     }
 

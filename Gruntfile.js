@@ -17,6 +17,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     clean: ['dist/',
+            'test-driver/dist/',
             'docs/',
             'coverage-final.json',
             'browser/scripts/ion/'
@@ -41,6 +42,9 @@ module.exports = function(grunt) {
       },
       'commonjs-es6': {
         tsconfig: 'tsconfig.commonjs.json'
+      },
+      'test-driver' : {
+        tsconfig: './test-driver/tsconfig.test-driver.json'
       }
     },
     tslint: {
@@ -165,6 +169,8 @@ module.exports = function(grunt) {
   grunt.registerTask('build:es6', ['ts:es6-es6']);
   grunt.registerTask('build:cjs', ['ts:commonjs-es6']);
   grunt.registerTask('build:amd', ['ts:amd-es6']);
+  grunt.registerTask('build-tsc:test-driver', ['ts:test-driver']);
+  grunt.registerTask('build:test-driver', ['clean', 'build:cjs', 'build-tsc:test-driver']);
   grunt.registerTask('build', [
       'clean', 'build:es6', 'build:amd', 'build:cjs', 'trans:browser', 'copy:all'
   ]);
@@ -185,7 +191,7 @@ module.exports = function(grunt) {
   grunt.registerTask('doc', ['typedoc']);
 
   grunt.registerTask('cleanup', 'Removes extraneous files from distributions', function() {
-    grunt.file.expand('dist/**/IonEvent*').forEach((file) => grunt.file.delete(file));
+    //grunt.file.expand('dist/**/test-driver/*.d.ts').forEach((file) => grunt.file.delete(file));
   });
 
   // release target used by Travis 

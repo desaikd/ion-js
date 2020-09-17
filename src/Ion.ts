@@ -139,3 +139,8 @@ export {dom};
 
 // Re-export dom convenience methods for easy access via 'ion'
 export {load, loadAll} from "./dom";
+
+//Ion-event exports and comparison Result export
+export {IonEvent, IonEventType, IonEventFactory} from "./events/IonEvent";
+export {IonEventStream} from "./events/IonEventStream";
+export {ComparisonResult, ComparisonResultType} from "./ComparisonResult";
