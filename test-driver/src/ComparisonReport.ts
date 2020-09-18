@@ -18,6 +18,9 @@ import {IonTypes, makeTextWriter} from "ion-js";
 import {ComparisonContext} from "./ComparisonContext";
 import {ComparisonResultType} from "ion-js";
 
+/** comparison report structure for compare
+ *  for more information: https://github.com/amzn/ion-test-driver#comparisonreport
+ */
 export class IonComparisonReport {
     lhs: ComparisonContext;
     rhs: ComparisonContext;

@@ -17,7 +17,9 @@ import {OutputFormat} from "./OutputFormat";
 import fs from "fs";
 import yargs from "yargs";
 
-/** common CLI arguments structure */
+/** common CLI arguments structure
+ *  for more information: https://github.com/amzn/ion-test-driver#standardized-cli
+ */
 export class IonCliCommonArgs {
     inputFiles: Array<string>;
     outputFormatName: OutputFormat;

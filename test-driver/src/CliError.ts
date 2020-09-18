@@ -22,7 +22,9 @@ export enum ErrorType {
     STATE = "STATE"
 }
 
-/** Error structure for error report */
+/** Error structure for error report
+ * for more information: https://github.com/amzn/ion-test-driver#errorreport
+ */
 export class IonCliError {
     errorType: ErrorType;
     eventIndex: number;

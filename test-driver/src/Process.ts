@@ -54,11 +54,12 @@ export class Process {
         }
     }
 
-    getInput(path: string): string | Buffer {
+    private getInput(path: string): string | Buffer {
         let options = path.endsWith(".10n") ? null : "utf8";
         return fs.readFileSync(path, options);
     }
 
+    // create a reader for an input stream
     createReaderForProcess(path: string, args: IonCliCommonArgs): Reader {
         let ionReader;
         try {
@@ -69,13 +70,14 @@ export class Process {
         return ionReader;
     }
 
-    isEventStream(ionReader: Reader): boolean {
+    private isEventStream(ionReader: Reader): boolean {
         let type = ionReader.next();
         return type != null
             && type == IonTypes.SYMBOL
             && ionReader.stringValue() == this.EVENT_STREAM;
     }
 
+    // processes input streams into event streams
     processEvents(ionOutputWriter: Writer, args: IonCliCommonArgs): void {
         for (let path of args.getInputFiles()) {
             this.processEvent(ionOutputWriter, args, path);
@@ -83,12 +85,12 @@ export class Process {
         args.getOutputFile().write(ionOutputWriter.getBytes());
     }
 
-    processEvent(ionOutputWriter: Writer, args: IonCliCommonArgs, path: string): void {
+    private processEvent(ionOutputWriter: Writer, args: IonCliCommonArgs, path: string): void {
         let ionReader = this.createReaderForProcess(path, args);
         this.writeToEventStream(ionOutputWriter, ionReader, path, args);
     }
 
-    writeToEventStream(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
+    private writeToEventStream(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
         let eventStream;
         try {
             eventStream = new IonEventStream(ionReader);
@@ -122,7 +124,7 @@ export class Process {
         }
     }
 
-    collectInputStreamEvents(writeEvents: IonEvent[], eventStream: IonEventStream): IonEvent[] {
+    private collectInputStreamEvents(writeEvents: IonEvent[], eventStream: IonEventStream): IonEvent[] {
         for(let i = 0; i < eventStream.getEvents().length; i++) {
             let event = eventStream.getEvents()[i];
             writeEvents.push(event);
@@ -137,6 +139,7 @@ export class Process {
         return writeEvents;
     }
 
+    // process input stream into specified output format (except events)
     processFiles(ionOutputWriter: Writer, args: IonCliCommonArgs): void {
         for (let path of args.getInputFiles()) {
             this.processFile(ionOutputWriter, args, path);
@@ -144,7 +147,7 @@ export class Process {
         args.getOutputFile().write(ionOutputWriter.getBytes());
     }
 
-    processFile(ionOutputWriter: Writer, args: IonCliCommonArgs, path: string): void {
+    private processFile(ionOutputWriter: Writer, args: IonCliCommonArgs, path: string): void {
         let ionReader = this.createReaderForProcess(path, args);
         if (this.isEventStream(ionReader)) {
             let reader = this.createReaderForProcess(path, args);
@@ -154,7 +157,8 @@ export class Process {
         }
     }
 
-    writeToProcessFileFromEventStream(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
+    // write event stream to specified output format (except events)
+    private writeToProcessFileFromEventStream(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
         let eventStream;
         try {
             eventStream = new IonEventStream(ionReader);
@@ -172,7 +176,8 @@ export class Process {
         }
     }
 
-    writeToProcessFile(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
+    // write input stream to specified output format (except events)
+    private writeToProcessFile(ionOutputWriter: Writer, ionReader: Reader, path: string, args: IonCliCommonArgs): void {
         try {
             ionOutputWriter.writeValues(ionReader);
             ionOutputWriter.close();

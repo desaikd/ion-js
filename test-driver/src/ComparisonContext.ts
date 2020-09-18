@@ -23,6 +23,7 @@ import {IonEvent, IonEventFactory, IonEventType} from "ion-js";
 
 /**
  * ComparisonContext to create a structure for lhs and rhs streams
+ * for more information: https://github.com/amzn/ion-test-driver#comparisonreport
  */
 export class ComparisonContext {
     location: string;
@@ -56,14 +57,14 @@ export class ComparisonContext {
         if(!eventStream.isEventStream) {
             // processes input stream(text or binary) into event stream
             events = this.collectInputStreamEvents(events, eventStream);
-            eventStream.eventStream = events;
+            eventStream.events = events;
         }
         this.eventStream = eventStream;
     }
 
     collectInputStreamEvents(events: IonEvent[], eventStream: IonEventStream): IonEvent[] {
-        for(let i = 0; i < eventStream.eventStream.length; i++) {
-            let event = eventStream.eventStream[i];
+        for(let i = 0; i < eventStream.events.length; i++) {
+            let event = eventStream.events[i];
             events.push(event);
             if (eventStream.isEmbedded(event)) {
                 let tempEvents: IonEvent[] = [];

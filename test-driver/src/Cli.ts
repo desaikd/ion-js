@@ -16,7 +16,7 @@
 import yargs from "yargs";
 
 /**
- * This will cause `yargs` to look in other .ts files in the same directory for command modules.
+ * This will cause `yargs` to look in other .ts/.js files in the same directory for command modules.
  *
  * For more information, see:
  * Command modules: https://github.com/yargs/yargs/blob/master/docs/advanced.md#providing-a-command-module
@@ -24,7 +24,7 @@ import yargs from "yargs";
  */
 yargs
     .commandDir(__dirname,{
-        extensions: ['ts','js','d.ts'],
+        extensions: ['ts','js'],
     })
     .options({
         'output': {

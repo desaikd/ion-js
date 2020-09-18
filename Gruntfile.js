@@ -16,12 +16,14 @@
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    clean: ['dist/',
-            'test-driver/dist/',
-            'docs/',
-            'coverage-final.json',
-            'browser/scripts/ion/'
-           ],
+    clean: {
+      'ion-js': ['dist/',
+                 'docs/',
+                 'coverage-final.json',
+                 'browser/scripts/ion/'
+                ],
+      'test-driver': ['test-driver/dist/']
+    },
     jshint: {
       files: []
     },
@@ -44,7 +46,7 @@ module.exports = function(grunt) {
         tsconfig: 'tsconfig.commonjs.json'
       },
       'test-driver' : {
-        tsconfig: './test-driver/tsconfig.test-driver.json'
+        tsconfig: './test-driver/tsconfig.json'
       }
     },
     tslint: {
@@ -170,9 +172,9 @@ module.exports = function(grunt) {
   grunt.registerTask('build:cjs', ['ts:commonjs-es6']);
   grunt.registerTask('build:amd', ['ts:amd-es6']);
   grunt.registerTask('build-tsc:test-driver', ['ts:test-driver']);
-  grunt.registerTask('build:test-driver', ['clean', 'build:cjs', 'build-tsc:test-driver']);
+  grunt.registerTask('build:test-driver', ['clean:test-driver', 'build:cjs', 'build-tsc:test-driver']);
   grunt.registerTask('build', [
-      'clean', 'build:es6', 'build:amd', 'build:cjs', 'trans:browser', 'copy:all'
+      'clean:ion-js', 'build:es6', 'build:amd', 'build:cjs', 'trans:browser', 'copy:all'
   ]);
 
   // Temporary targets that will eventually replace 'test' and 'test:coverage'
@@ -190,13 +192,9 @@ module.exports = function(grunt) {
 
   grunt.registerTask('doc', ['typedoc']);
 
-  grunt.registerTask('cleanup', 'Removes extraneous files from distributions', function() {
-    //grunt.file.expand('dist/**/test-driver/*.d.ts').forEach((file) => grunt.file.delete(file));
-  });
-
   // release target used by Travis 
-  grunt.registerTask('release', ['test:coverage', 'build', 'cleanup', 'typedoc', 'nojekyll']);
+  grunt.registerTask('release', ['test:coverage', 'build', 'typedoc', 'nojekyll']);
 
   // default for development
-  grunt.registerTask('default', ['test', 'cleanup']);
+  grunt.registerTask('default', ['test']);
 };

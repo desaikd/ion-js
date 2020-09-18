@@ -1,5 +1,5 @@
-// Base Typscript Compiler Configuration
-// Targets ES6 Module system and ES6 feature set.
+// Test-driver Typscript Compiler Configuration
+// Targets CommonJS Module system and ES6 feature set.
 {
   "include": [
     "src/**"

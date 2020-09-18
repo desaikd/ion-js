@@ -75,6 +75,7 @@ export class Compare {
         }
     }
 
+    // compares files according to comparison type
     compareFiles(ionOutputWriter: Writer, args: IonCompareArgs): void {
         for (let pathFirst of args.getInputFiles()) {
             for(let pathSecond of args.getInputFiles()) {
@@ -87,7 +88,7 @@ export class Compare {
         }
     }
 
-    compareFilePair(ionOutputWriter: Writer, pathFirst: string, pathSecond: string, args: IonCompareArgs): void {
+    private compareFilePair(ionOutputWriter: Writer, pathFirst: string, pathSecond: string, args: IonCompareArgs): void {
         let lhs = new ComparisonContext(pathFirst, args);
         let rhs = new ComparisonContext(pathSecond, args);
         ionOutputWriter.close();
@@ -143,8 +144,8 @@ export class Compare {
             let expectedContainer: any = [];
             if (actual.isEmbedded(actualEvent) && expected.isEmbedded(expectedEvent)) {
                 //we found a list of strings that we need to interpret as top level ion text streams.
-                actualContainer = this.parseEventStream(actualEvent);
-                expectedContainer = this.parseEventStream(expectedEvent);
+                actualContainer = this.parseEmbeddedStream(actualEvent);
+                expectedContainer = this.parseEmbeddedStream(expectedEvent);
             } else {//we're in an sexp/list
                 actualContainer = this.parseContainer(actualEvent);
                 expectedContainer = this.parseContainer(expectedEvent);
@@ -192,6 +193,8 @@ export class Compare {
         return new ComparisonResult(comparisonType == ComparisonType.NON_EQUIVS ? ComparisonResultType.NOT_EQUAL : ComparisonResultType.EQUAL);
     }
 
+
+    // parse container into events
     private parseContainer(event: IonEvent): IonEvent[] {
         let container: IonEvent[] = [];
         for (let j = 0; j < event.ionValue.length - 1; j++) {
@@ -203,7 +206,8 @@ export class Compare {
         return container;
     }
 
-    private parseEventStream(event: IonEvent): any {
+    // parse embedded stream into events
+    private parseEmbeddedStream(event: IonEvent): any {
         let container: any = [];
         for (let j = 0; j < event.ionValue.length - 1; j++) {
             if(event.ionValue[j].eventType == IonEventType.STREAM_END)

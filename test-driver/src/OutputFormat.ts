@@ -28,6 +28,7 @@ export enum OutputFormat {
     NONE = "none"
 }
 
+/** gets the writer corresponding to the output format **/
 export namespace OutputFormat {
     export function createIonWriter(name: OutputFormat) : Writer | null {
         switch (name) {

@@ -25,13 +25,13 @@ import {ComparisonResultType} from "../ComparisonResult";
 import {ComparisonResult} from "../ComparisonResult";
 
 export class IonEventStream {
-    eventStream: IonEvent[];
+    events: IonEvent[];
     private reader: Reader;
     private eventFactory: IonEventFactory;
     isEventStream: boolean; // whether the reader has an event stream as input
 
     constructor(reader: Reader) {
-        this.eventStream = [];
+        this.events = [];
         this.reader = reader;
         this.eventFactory = new IonEventFactory();
         this.isEventStream = false;
@@ -40,16 +40,16 @@ export class IonEventStream {
 
     writeEventStream(writer: Writer) {
         writer.writeSymbol("$ion_event_stream");
-        for (let i: number = 0; i < this.eventStream.length; i++) {
-                this.eventStream[i].write(writer);
+        for (let i: number = 0; i < this.events.length; i++) {
+            this.events[i].write(writer);
         }
     }
 
     writeIon(writer: Writer) {
         let tempEvent: IonEvent;
         let isEmbedded = false;
-        for (let indice: number = 0; indice < this.eventStream.length; indice++) {
-            tempEvent = this.eventStream[indice];
+        for (let indice: number = 0; indice < this.events.length; indice++) {
+            tempEvent = this.events[indice];
             if (tempEvent.fieldName !== null) {
                 writer.writeFieldName(tempEvent.fieldName);
             }
@@ -124,7 +124,7 @@ export class IonEventStream {
     }
 
     getEvents(): IonEvent[] {
-        return this.eventStream;
+        return this.events;
     }
 
     equals(expected: IonEventStream): boolean {
@@ -137,12 +137,12 @@ export class IonEventStream {
     compare(expected: IonEventStream): ComparisonResult {
         let actualIndex: number = 0;
         let expectedIndex: number = 0;
-        if(this.eventStream.length != expected.eventStream.length) {
-            return new ComparisonResult(ComparisonResultType.ERROR, "Both event streams of different length");
+        if(this.events.length != expected.events.length) {
+            return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "The event streams have different lengths");
         }
-        while (actualIndex < this.eventStream.length && expectedIndex < expected.eventStream.length) {
-            let actualEvent = this.eventStream[actualIndex];
-            let expectedEvent = expected.eventStream[expectedIndex];
+        while (actualIndex < this.events.length && expectedIndex < expected.events.length) {
+            let actualEvent = this.events[actualIndex];
+            let expectedEvent = expected.events[expectedIndex];
             if (actualEvent.eventType === IonEventType.SYMBOL_TABLE) actualIndex++;
             if (expectedEvent.eventType === IonEventType.SYMBOL_TABLE) expectedIndex++;
             if (actualEvent.eventType === IonEventType.SYMBOL_TABLE || expectedEvent.eventType === IonEventType.SYMBOL_TABLE) continue;
@@ -205,22 +205,22 @@ export class IonEventStream {
             let currentContainerIndex: number[] = [];
             while (true) {
                 if (this.reader.isNull()) {
-                    this.eventStream.push(this.eventFactory.makeEvent(IonEventType.SCALAR, tid!, this.reader.fieldName(), this.reader.depth(), this.reader.annotations(), true, this.reader.value()));
+                    this.events.push(this.eventFactory.makeEvent(IonEventType.SCALAR, tid!, this.reader.fieldName(), this.reader.depth(), this.reader.annotations(), true, this.reader.value()));
                 } else {
                     switch (tid) {
                         case IonTypes.LIST:
                         case IonTypes.SEXP:
                         case IonTypes.STRUCT: {
                             let containerEvent = this.eventFactory.makeEvent(IonEventType.CONTAINER_START, tid, this.reader.fieldName(), this.reader.depth(), this.reader.annotations(), false, null);
-                            this.eventStream.push(containerEvent);
+                            this.events.push(containerEvent);
                             currentContainer.push(containerEvent);
-                            currentContainerIndex.push(this.eventStream.length);
+                            currentContainerIndex.push(this.events.length);
                             this.reader.stepIn();
                             break;
                         }
                         case null: {
                             if (this.reader.depth() === 0) {
-                                this.eventStream.push(this.eventFactory.makeEvent(IonEventType.STREAM_END, IonTypes.NULL, null, this.reader.depth(), [], false, undefined));
+                                this.events.push(this.eventFactory.makeEvent(IonEventType.STREAM_END, IonTypes.NULL, null, this.reader.depth(), [], false, undefined));
                                 return;
                             } else {
                                 this.reader.stepOut();
@@ -229,26 +229,27 @@ export class IonEventStream {
                             break;
                         }
                         default: {
-                            this.eventStream.push(this.eventFactory.makeEvent(IonEventType.SCALAR, tid, this.reader.fieldName(), this.reader.depth(), this.reader.annotations(), false, this.reader.value()));
+                            this.events.push(this.eventFactory.makeEvent(IonEventType.SCALAR, tid, this.reader.fieldName(), this.reader.depth(), this.reader.annotations(), false, this.reader.value()));
                             break;
                         }
                     }
                 }
                 tid = this.reader.next();
             }
-        } catch (er) {
-            throw new Error("READ " + er.message);
+        } catch (error) {
+            // This Error will be used by the test-driver to differentiate errors using error types(prefix).
+            throw new Error("READ " + error.message);
         }
     }
 
     private endContainer(thisContainer: IonEvent, thisContainerIndex: number) {
-        this.eventStream.push(this.eventFactory.makeEvent(IonEventType.CONTAINER_END, thisContainer.ionType!, null, thisContainer.depth, [], false, null));
-        thisContainer.ionValue = this.eventStream.slice(thisContainerIndex, this.eventStream.length);
+        this.events.push(this.eventFactory.makeEvent(IonEventType.CONTAINER_END, thisContainer.ionType!, null, thisContainer.depth, [], false, null));
+        thisContainer.ionValue = this.events.slice(thisContainerIndex, this.events.length);
     }
 
 //(event_type: EventType, ion_type: IonType, field_name: SymbolToken, annotations: list<SymbolToken>, value_text: string, value_binary: list<byte>, imports: list<ImportDescriptor>, depth: int)
     private marshalStream(): void {
-        this.eventStream = [];
+        this.events = [];
         let currentContainer: IonEvent[] = [];
         let currentContainerIndex: number[] = [];
         for (let tid: IonType | null = this.reader.next(); tid === IonTypes.STRUCT; tid = this.reader.next()) {
@@ -256,12 +257,12 @@ export class IonEventStream {
             let tempEvent: IonEvent = this.marshalEvent();
             if (tempEvent.eventType === IonEventType.CONTAINER_START) {
                 currentContainer.push(tempEvent);
-                this.eventStream.push(tempEvent);
-                currentContainerIndex.push(this.eventStream.length);
+                this.events.push(tempEvent);
+                currentContainerIndex.push(this.events.length);
             } else if (tempEvent.eventType === IonEventType.CONTAINER_END) {
                 this.endContainer(currentContainer.pop()!, currentContainerIndex.pop()!);
             } else if (tempEvent.eventType === IonEventType.SCALAR || tempEvent.eventType === IonEventType.STREAM_END) {
-                this.eventStream.push(tempEvent);
+                this.events.push(tempEvent);
             } else {
                 throw new Error('Unexpected eventType: ' + tempEvent.eventType);
             }

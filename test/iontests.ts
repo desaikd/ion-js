@@ -19,7 +19,6 @@ import {IonType, Reader, Writer} from '../src/Ion';
 import * as fs from 'fs';
 import * as path from 'path';
 import {IonEventStream} from '../src/events/IonEventStream';
-import {ComparisonType} from "../test-driver/src/Compare";
 import {IonEventType} from "../src/events/IonEvent";
 
 function findFiles(folder: string, files: string[] = []) {

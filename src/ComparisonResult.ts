@@ -14,7 +14,11 @@
  */
 
 
-/** Comparison result types for the comparison report */
+/** Comparison result types for the comparison report
+ *  EQUALS: Indicates the input streams are equal
+ *  NOT_EQUAL: Indicates the input streams are not equal
+ *  ERROR: For all the cases where an error occurs while reading or writing input streams
+ */
 export enum ComparisonResultType {
     EQUAL = "EQUAL",
     NOT_EQUAL = "NOT_EQUAL",
