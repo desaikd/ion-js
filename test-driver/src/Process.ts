@@ -111,15 +111,15 @@ export class Process {
             }
 
             ionOutputWriter.close();
-        } catch (Error) {
-            if(Error.message.search("READ") != -1) {
-                new IonCliError(ErrorType.READ, path, Error.message, args.getErrorReportFile(), eventStream.getEvents().length).writeErrorReport();
+        } catch (EventStreamError) {
+            if(EventStreamError.type === "READ") {
+                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), EventStreamError.index).writeErrorReport();
             }
-            else if(Error.message.search("WRITE") != -1) {
-                new IonCliError(ErrorType.WRITE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            else if(EventStreamError.type === "WRITE") {
+                new IonCliError(ErrorType.WRITE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
             }
             else {
-                new IonCliError(ErrorType.STATE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+                new IonCliError(ErrorType.STATE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
             }
         }
     }
@@ -163,15 +163,15 @@ export class Process {
         try {
             eventStream = new IonEventStream(ionReader);
             eventStream.writeIon(ionOutputWriter);
-        } catch (Error) {
-            if(Error.message.search("READ") != -1) {
-                new IonCliError(ErrorType.READ, path, Error.message, args.getErrorReportFile(), eventStream.getEvents().length).writeErrorReport();
+        } catch (EventStreamError) {
+            if(EventStreamError.type === "READ") {
+                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), EventStreamError.index).writeErrorReport();
             }
-            else if(Error.message.search("WRITE") != -1) {
-                new IonCliError(ErrorType.WRITE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+            else if(EventStreamError.type === "WRITE") {
+                new IonCliError(ErrorType.WRITE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
             }
             else {
-                new IonCliError(ErrorType.STATE, path, Error.message, args.getErrorReportFile()).writeErrorReport();
+                new IonCliError(ErrorType.STATE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
             }
         }
     }

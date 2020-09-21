@@ -23,6 +23,7 @@ import {BinaryReader} from "../IonBinaryReader";
 import {BinarySpan} from "../IonSpan";
 import {ComparisonResultType} from "../ComparisonResult";
 import {ComparisonResult} from "../ComparisonResult";
+import {EventStreamError} from "./EventStreamError";
 
 export class IonEventStream {
     events: IonEvent[];
@@ -238,7 +239,7 @@ export class IonEventStream {
             }
         } catch (error) {
             // This Error will be used by the test-driver to differentiate errors using error types(prefix).
-            throw new Error("READ " + error.message);
+            throw new EventStreamError("READ" , error.message , this.events.length);
         }
     }
 
