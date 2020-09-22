@@ -173,8 +173,10 @@ export class IonEventStream {
                         eventResult.expectedIndex = expectedIndex;
                         return eventResult;
                     } else {
-                        actualIndex = actualIndex + actualEvent.ionValue.length;
-                        expectedIndex = expectedIndex + expectedEvent.ionValue.length;
+                        if(actualEvent.ionValue !== null && expectedEvent.ionValue !== null) {
+                            actualIndex = actualIndex + actualEvent.ionValue.length;
+                            expectedIndex = expectedIndex + expectedEvent.ionValue.length;
+                        }
                     }
                     break;
                 }

@@ -471,9 +471,11 @@ class IonStructEvent extends AbsIonContainerEvent {//no embed support as of yet.
         if(!(expected instanceof IonStructEvent)) {
             return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Event types don't match", );
         }
-        if(this.ionValue.length !== expected.ionValue.length)
+        let container = this.ionValue == null ? [] : this.ionValue;
+        let expectedContainer = expected.ionValue == null ? [] : this.ionValue;
+        if(container.length !== expectedContainer.length)
             return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Struct length don't match");
-        return this.structsCompare(this.ionValue, expected.ionValue);
+        return this.structsCompare(container, expectedContainer);
     }
 
     //for each actual ionEvent, searches for an equivalent expected ionEvent,
@@ -518,8 +520,8 @@ class IonListEvent extends AbsIonContainerEvent {
 
     valueCompare(expected: IonListEvent): ComparisonResult {
         if (!(expected instanceof IonListEvent)) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Event types don't match");
-        let container = this.ionValue;
-        let expectedContainer = expected.ionValue;
+        let container = this.ionValue == null ? [] : this.ionValue;
+        let expectedContainer = expected.ionValue == null ? [] : this.ionValue;
         if (container.length !== expectedContainer.length) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "List length don't match");
         for (let i: number = 0; i < container.length; i++) {
             let child = container[i];
@@ -542,8 +544,8 @@ class IonSexpEvent extends AbsIonContainerEvent {
 
     valueCompare(expected: IonSexpEvent): ComparisonResult {
         if (!(expected instanceof IonSexpEvent)) return new ComparisonResult(ComparisonResultType.NOT_EQUAL,"Event types don't match");
-        let container = this.ionValue;
-        let expectedContainer = expected.ionValue;
+        let container = this.ionValue == null ? [] : this.ionValue;
+        let expectedContainer = expected.ionValue == null ? [] : this.ionValue;
         if (container.length !== expectedContainer.length) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "S-expression length don't match");
         for (let i: number = 0; i < container.length; i++) {
             let child = container[i];
