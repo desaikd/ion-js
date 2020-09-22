@@ -47,81 +47,87 @@ export class IonEventStream {
     }
 
     writeIon(writer: Writer) {
-        let tempEvent: IonEvent;
-        let isEmbedded = false;
-        for (let indice: number = 0; indice < this.events.length; indice++) {
-            tempEvent = this.events[indice];
-            if (tempEvent.fieldName !== null) {
-                writer.writeFieldName(tempEvent.fieldName);
-            }
-            if((tempEvent.ionType == IonTypes.SEXP || tempEvent.ionType == IonTypes.LIST)
-                && this.isEmbedded(tempEvent)) {
-                isEmbedded = true;
-            }
-            writer.setAnnotations(tempEvent.annotations);
-            switch (tempEvent.eventType) {
-                case IonEventType.SCALAR:
-                    if (tempEvent.ionValue == null) {
-                        writer.writeNull(tempEvent.ionType!);
-                        return;
-                    }
-                    if (isEmbedded) {
-                        writer.writeString(tempEvent.ionValue.toString());
+        try {
+            let tempEvent: IonEvent;
+            let isEmbedded = false;
+            for (let indice: number = 0; indice < this.events.length; indice++) {
+                tempEvent = this.events[indice];
+                if (tempEvent.fieldName !== null) {
+                    writer.writeFieldName(tempEvent.fieldName);
+                }
+                if ((tempEvent.ionType == IonTypes.SEXP || tempEvent.ionType == IonTypes.LIST)
+                    && this.isEmbedded(tempEvent)) {
+                    isEmbedded = true;
+                }
+                writer.setAnnotations(tempEvent.annotations);
+                switch (tempEvent.eventType) {
+                    case IonEventType.SCALAR:
+                        if (tempEvent.ionValue == null) {
+                            writer.writeNull(tempEvent.ionType!);
+                            return;
+                        }
+                        if (isEmbedded) {
+                            writer.writeString(tempEvent.ionValue.toString());
+                            break;
+                        }
+                        switch (tempEvent.ionType) {
+                            case IonTypes.BOOL:
+                                writer.writeBoolean(tempEvent.ionValue);
+                                break;
+                            case IonTypes.STRING:
+                                writer.writeString(tempEvent.ionValue);
+                                break;
+                            case IonTypes.SYMBOL:
+                                writer.writeSymbol(tempEvent.ionValue);
+                                break;
+                            case IonTypes.INT:
+                                writer.writeInt(tempEvent.ionValue);
+                                break;
+                            case IonTypes.DECIMAL:
+                                writer.writeDecimal(tempEvent.ionValue);
+                                break;
+                            case IonTypes.FLOAT:
+                                writer.writeFloat64(tempEvent.ionValue);
+                                break;
+                            case IonTypes.NULL:
+                                writer.writeNull(tempEvent.ionType);
+                                break;
+                            case IonTypes.TIMESTAMP:
+                                writer.writeTimestamp(tempEvent.ionValue);
+                                break;
+                            case IonTypes.CLOB:
+                                writer.writeClob(tempEvent.ionValue);
+                                break;
+                            case IonTypes.BLOB:
+                                writer.writeBlob(tempEvent.ionValue);
+                                break;
+                            default:
+                                throw new Error("unexpected type: " + tempEvent.ionType!.name);
+                        }
                         break;
-                    }
-                    switch (tempEvent.ionType) {
-                        case IonTypes.BOOL:
-                            writer.writeBoolean(tempEvent.ionValue);
-                            break;
-                        case IonTypes.STRING:
-                            writer.writeString(tempEvent.ionValue);
-                            break;
-                        case IonTypes.SYMBOL:
-                            writer.writeSymbol(tempEvent.ionValue);
-                            break;
-                        case IonTypes.INT:
-                            writer.writeInt(tempEvent.ionValue);
-                            break;
-                        case IonTypes.DECIMAL:
-                            writer.writeDecimal(tempEvent.ionValue);
-                            break;
-                        case IonTypes.FLOAT:
-                            writer.writeFloat64(tempEvent.ionValue);
-                            break;
-                        case IonTypes.NULL:
-                            writer.writeNull(tempEvent.ionType);
-                            break;
-                        case IonTypes.TIMESTAMP:
-                            writer.writeTimestamp(tempEvent.ionValue);
-                            break;
-                        case IonTypes.CLOB:
-                            writer.writeClob(tempEvent.ionValue);
-                            break;
-                        case IonTypes.BLOB:
-                            writer.writeBlob(tempEvent.ionValue);
-                            break;
-                        default:
-                            throw new Error("unexpected type: " + tempEvent.ionType!.name);
-                    }
-                    break;
-                case IonEventType.CONTAINER_START:
-                    writer.stepIn(tempEvent.ionType!);
-                    break;
-                case IonEventType.CONTAINER_END:
-                    if(isEmbedded) {
-                        isEmbedded = false;
-                    }
-                    writer.stepOut();
-                    break;
-                case IonEventType.STREAM_END:
-                    break;
-                case IonEventType.SYMBOL_TABLE:
-                    throw new Error("Symboltables unsupported.");
-                default:
-                    throw new Error("Unexpected event type: " + tempEvent.eventType);
+                    case IonEventType.CONTAINER_START:
+                        writer.stepIn(tempEvent.ionType!);
+                        break;
+                    case IonEventType.CONTAINER_END:
+                        if (isEmbedded) {
+                            isEmbedded = false;
+                        }
+                        writer.stepOut();
+                        break;
+                    case IonEventType.STREAM_END:
+                        break;
+                    case IonEventType.SYMBOL_TABLE:
+                        throw new Error("Symboltables unsupported.");
+                    default:
+                        throw new Error("Unexpected event type: " + tempEvent.eventType);
+                }
             }
+            writer.close();
+        } catch(error) {
+            // This Error will be used by the test-driver to differentiate errors using error types.
+            throw new EventStreamError("WRITE" , error.message , this.events.length);
         }
-        writer.close();
+
     }
 
     getEvents(): IonEvent[] {
@@ -238,7 +244,7 @@ export class IonEventStream {
                 tid = this.reader.next();
             }
         } catch (error) {
-            // This Error will be used by the test-driver to differentiate errors using error types(prefix).
+            // This Error will be used by the test-driver to differentiate errors using error types.
             throw new EventStreamError("READ" , error.message , this.events.length);
         }
     }
