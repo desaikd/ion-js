@@ -472,7 +472,7 @@ class IonStructEvent extends AbsIonContainerEvent {//no embed support as of yet.
             return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Event types don't match", );
         }
         let container = this.ionValue == null ? [] : this.ionValue;
-        let expectedContainer = expected.ionValue == null ? [] : this.ionValue;
+        let expectedContainer = expected.ionValue == null ? [] : expected.ionValue;
         if(container.length !== expectedContainer.length)
             return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Struct length don't match");
         return this.structsCompare(container, expectedContainer);
@@ -521,7 +521,7 @@ class IonListEvent extends AbsIonContainerEvent {
     valueCompare(expected: IonListEvent): ComparisonResult {
         if (!(expected instanceof IonListEvent)) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "Event types don't match");
         let container = this.ionValue == null ? [] : this.ionValue;
-        let expectedContainer = expected.ionValue == null ? [] : this.ionValue;
+        let expectedContainer = expected.ionValue == null ? [] : expected.ionValue;
         if (container.length !== expectedContainer.length) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "List length don't match");
         for (let i: number = 0; i < container.length; i++) {
             let child = container[i];
@@ -545,7 +545,7 @@ class IonSexpEvent extends AbsIonContainerEvent {
     valueCompare(expected: IonSexpEvent): ComparisonResult {
         if (!(expected instanceof IonSexpEvent)) return new ComparisonResult(ComparisonResultType.NOT_EQUAL,"Event types don't match");
         let container = this.ionValue == null ? [] : this.ionValue;
-        let expectedContainer = expected.ionValue == null ? [] : this.ionValue;
+        let expectedContainer = expected.ionValue == null ? [] : expected.ionValue;
         if (container.length !== expectedContainer.length) return new ComparisonResult(ComparisonResultType.NOT_EQUAL, "S-expression length don't match");
         for (let i: number = 0; i < container.length; i++) {
             let child = container[i];
