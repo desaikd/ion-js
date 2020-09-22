@@ -18,6 +18,6 @@
   "homepage": "https://github.com/amzn/ion-js#readme",
   "dependencies": {
     "yargs": "^15.4.1",
-    "ion-js": "../../ion-js"
+    "ion-js": "../"
   }
 }

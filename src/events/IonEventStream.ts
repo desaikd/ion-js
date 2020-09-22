@@ -125,7 +125,7 @@ export class IonEventStream {
             writer.close();
         } catch(error) {
             // This Error will be used by the test-driver to differentiate errors using error types.
-            throw new EventStreamError("WRITE" , error.message , this.events.length);
+            throw new EventStreamError("WRITE" , error.message , this.events.length, this.events);
         }
 
     }
@@ -245,7 +245,7 @@ export class IonEventStream {
             }
         } catch (error) {
             // This Error will be used by the test-driver to differentiate errors using error types.
-            throw new EventStreamError("READ" , error.message , this.events.length);
+            throw new EventStreamError("READ" , error.message , this.events.length, this.events);
         }
     }
 
