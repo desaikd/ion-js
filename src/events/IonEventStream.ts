@@ -296,7 +296,7 @@ export class IonEventStream {
                 }
 
                 case 'field_name': {
-                    currentEvent[fieldName] = this.reader.stringValue();
+                    currentEvent[fieldName] = this.parseFieldName();
                     break;
                 }
 
@@ -483,5 +483,30 @@ export class IonEventStream {
 
     private parseImports(): any { //TODO needed for symboltoken support.
         return this.reader.value();
+    }
+
+    private parseFieldName(): string | null {
+        if(this.reader.isNull()) {
+            return null;
+        }
+        this.reader.stepIn();
+        let type = this.reader.next();
+        if(this.reader.fieldName() == "text" && type == IonTypes.STRING) {
+            let text = this.reader.stringValue();
+            if (text !== null) {
+                this.reader.stepOut();
+                return text;
+            }
+        }
+        else if(this.reader.fieldName() == "importLocation" && type == IonTypes.INT) {
+            let symtab = defaultLocalSymbolTable();
+            let symbol = symtab.getSymbolText(this.reader.numberValue()!)
+            if (symbol === undefined || symbol === null) {
+                throw new Error("Unresolvable symbol ID, symboltokens unsupported.");
+            }
+            this.reader.stepOut();
+            return symbol;
+        }
+        return null;
     }
 }

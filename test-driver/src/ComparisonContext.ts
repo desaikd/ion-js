@@ -95,7 +95,11 @@ export class ComparisonContext {
         ionOutputWriter.writeFieldName("location");
         ionOutputWriter.writeString(this.location);
         ionOutputWriter.writeFieldName("event");
-        this.getEventStream().getEvents()[event_index].write(ionOutputWriter);
+        if(this.getEventStream().getEvents().length > 0) {
+            this.getEventStream().getEvents()[event_index].write(ionOutputWriter);
+        } else {
+            ionOutputWriter.writeNull(IonTypes.NULL);
+        }
         ionOutputWriter.writeFieldName("event_index");
         ionOutputWriter.writeInt(event_index);
         ionOutputWriter.stepOut();

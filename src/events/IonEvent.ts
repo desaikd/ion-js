@@ -85,7 +85,10 @@ abstract class AbstractIonEvent implements IonEvent {
         }
         if (this.fieldName !== null && this.fieldName !== undefined) {
             writer.writeFieldName('field_name');
+            writer.stepIn(IonTypes.STRUCT);
+            writer.writeFieldName("text");
             writer.writeString(this.fieldName);
+            writer.stepOut();
         }
         if (this.annotations !== null) {
             writer.writeFieldName('annotations');
