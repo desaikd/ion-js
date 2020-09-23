@@ -30,9 +30,21 @@ export class ComparisonContext {
     eventStream: IonEventStream;
 
     constructor(path: string, args: IonCompareArgs){
-        this.location = path;
-        let ionReader = this.createReadersForComparison(args);
-        this.setEventStream(ionReader);
+        try {
+            this.location = path;
+            let ionReader = this.createReadersForComparison(args);
+            this.setEventStream(ionReader);
+        } catch (EventStreamError) {
+            if(EventStreamError.type === "READ") {
+                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), EventStreamError.index).writeErrorReport();
+            }
+            else if(EventStreamError.type === "WRITE") {
+                new IonCliError(ErrorType.WRITE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
+            }
+            else {
+                new IonCliError(ErrorType.STATE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
+            }
+        }
     }
 
     createReadersForComparison(args: IonCompareArgs): Reader {

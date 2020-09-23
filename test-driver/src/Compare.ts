@@ -23,6 +23,7 @@ import {IonEvent, IonEventType} from "ion-js";
 import {IonTypes} from "ion-js";
 import {makeReader} from "ion-js";
 import {IonEventStream} from "ion-js";
+import {ErrorType, IonCliError} from "./CliError";
 
 /**
  * The `command`, `describe`, and `handler` exports below are part of the yargs command module API
@@ -78,10 +79,10 @@ export class Compare {
     // compares files according to comparison type
     compareFiles(ionOutputWriter: Writer, args: IonCompareArgs): void {
         for (let pathFirst of args.getInputFiles()) {
-            for(let pathSecond of args.getInputFiles()) {
+            for (let pathSecond of args.getInputFiles()) {
                 let comparisonType = args.getComparisonType();
-                if(comparisonType == ComparisonType.BASIC && pathFirst === pathSecond) {
-                        continue;
+                if (comparisonType == ComparisonType.BASIC && pathFirst === pathSecond) {
+                    continue;
                 }
                 this.compareFilePair(ionOutputWriter, pathFirst, pathSecond, args);
             }
@@ -95,20 +96,26 @@ export class Compare {
         let comparisonType = args.getComparisonType();
         let comparisonReport = new IonComparisonReport(lhs, rhs, args.getOutputFile(), comparisonType);
         let result: ComparisonResult = new ComparisonResult();
+        let lhsEventStream = lhs.getEventStream();
+        let rhsEventStream = rhs.getEventStream();
         if(comparisonType == ComparisonType.BASIC) {
-            result = lhs.getEventStream().compare(rhs.getEventStream());
-            if(result.result == ComparisonResultType.NOT_EQUAL) {
-                comparisonReport.writeComparisonReport(result.result, result.message, result.actualIndex, result.expectedIndex);
+            if(lhsEventStream && rhsEventStream) {
+                result = lhs.getEventStream().compare(rhs.getEventStream());
+                if(result.result == ComparisonResultType.NOT_EQUAL) {
+                    comparisonReport.writeComparisonReport(result.result, result.message, result.actualIndex, result.expectedIndex);
+                }
             }
         }
         else if(comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIV_TIMELINE
             || comparisonType == ComparisonType.NON_EQUIVS) {
-            result = this.compareEquivs(lhs.getEventStream(), rhs.getEventStream(), comparisonType, comparisonReport);
-            if(comparisonType == ComparisonType.NON_EQUIVS && result.result == ComparisonResultType.EQUAL) {
-                comparisonReport.writeComparisonReport(result.result, result.message, result.actualIndex, result.expectedIndex);
-            }
-            else if((comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIV_TIMELINE) && result.result == ComparisonResultType.NOT_EQUAL) {
-                comparisonReport.writeComparisonReport(result.result, result.message, result.actualIndex, result.expectedIndex);
+            if(lhsEventStream && rhsEventStream) {
+                result = this.compareEquivs(lhs.getEventStream(), rhs.getEventStream(), comparisonType, comparisonReport);
+                if(comparisonType == ComparisonType.NON_EQUIVS && result.result == ComparisonResultType.EQUAL) {
+                    comparisonReport.writeComparisonReport(result.result, result.message, result.actualIndex, result.expectedIndex);
+                }
+                else if((comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIV_TIMELINE) && result.result == ComparisonResultType.NOT_EQUAL) {
+                    comparisonReport.writeComparisonReport(result.result, result.message, result.actualIndex, result.expectedIndex);
+                }
             }
         }
 
