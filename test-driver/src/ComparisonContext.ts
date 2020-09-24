@@ -30,21 +30,9 @@ export class ComparisonContext {
     eventStream: IonEventStream;
 
     constructor(path: string, args: IonCompareArgs){
-        try {
-            this.location = path;
-            let ionReader = this.createReadersForComparison(args);
-            this.setEventStream(ionReader);
-        } catch (EventStreamError) {
-            if(EventStreamError.type === "READ") {
-                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), EventStreamError.index).writeErrorReport();
-            }
-            else if(EventStreamError.type === "WRITE") {
-                new IonCliError(ErrorType.WRITE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
-            }
-            else {
-                new IonCliError(ErrorType.STATE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
-            }
-        }
+        this.location = path;
+        let ionReader = this.createReadersForComparison(args);
+        this.setEventStream(ionReader, path, args);
     }
 
     createReadersForComparison(args: IonCompareArgs): Reader {
@@ -62,16 +50,31 @@ export class ComparisonContext {
         return fs.readFileSync(path, options);
     }
 
-    setEventStream(ionReader: Reader) {
-        let eventStream = new IonEventStream(ionReader);
+    setEventStream(ionReader: Reader, path: string, args: IonCompareArgs) {
         let events: IonEvent[] = [];
+        try{
+            let eventStream = new IonEventStream(ionReader);
 
-        if(!eventStream.isEventStream) {
-            // processes input stream(text or binary) into event stream
-            events = this.collectInputStreamEvents(events, eventStream);
-            eventStream.events = events;
+            if(!eventStream.isEventStream) {
+                // processes input stream(text or binary) into event stream
+                events = this.collectInputStreamEvents(events, eventStream);
+                eventStream.events = events;
+            }
+            this.eventStream = eventStream;
+        } catch (EventStreamError) {
+            if(EventStreamError.eventstream) {
+                events.push(...EventStreamError.eventstream);
+            }
+            if(EventStreamError.type === "READ") {
+                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), events.length).writeErrorReport();
+            }
+            else if(EventStreamError.type === "WRITE") {
+                new IonCliError(ErrorType.WRITE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
+            }
+            else {
+                new IonCliError(ErrorType.STATE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
+            }
         }
-        this.eventStream = eventStream;
     }
 
     collectInputStreamEvents(events: IonEvent[], eventStream: IonEventStream): IonEvent[] {

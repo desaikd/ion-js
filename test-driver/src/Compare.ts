@@ -23,7 +23,6 @@ import {IonEvent, IonEventType} from "ion-js";
 import {IonTypes} from "ion-js";
 import {makeReader} from "ion-js";
 import {IonEventStream} from "ion-js";
-import {ErrorType, IonCliError} from "./CliError";
 
 /**
  * The `command`, `describe`, and `handler` exports below are part of the yargs command module API
@@ -158,9 +157,6 @@ export class Compare {
                 expectedContainer = this.parseContainer(expectedEvent);
             }
 
-            actualIndex = actualIndex + actualEvent.ionValue.length;
-            expectedIndex = expectedIndex + expectedEvent.ionValue.length;
-
             for (let i = 0; i < actualContainer.length; i++) {
                 for (let j = 0; j < expectedContainer.length; j++) {
                     // for non-equivs: not comparing same index's value as it will always be same.
@@ -182,20 +178,26 @@ export class Compare {
                     if ((comparisonType == ComparisonType.EQUIVS || comparisonType == ComparisonType.EQUIV_TIMELINE)
                         && eventResult.result == ComparisonResultType.NOT_EQUAL) {
                         if(comparisonReport) {
-                            comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, i + 1, j + 1);
+                            // set event-index as the index of container + (i/j) representing the event-index inside container
+                            // + 1 to skip the first event (the container event)
+                            comparisonReport.writeComparisonReport(ComparisonResultType.NOT_EQUAL, eventResult.message, actualIndex+ i + 1, expectedIndex + j + 1);
                         }
                         return new ComparisonResult(ComparisonResultType.NOT_EQUAL);
                     } else if (comparisonType == ComparisonType.NON_EQUIVS && eventResult.result == ComparisonResultType.EQUAL) {
                         if(comparisonReport) {
+                            // set event-index as the index of container + (i/j) representing the event-index inside container
+                            // + 1 to skip the first event (the container event)
                             comparisonReport.writeComparisonReport(ComparisonResultType.EQUAL,
-                                "Both values are equal in non-equivs comparison.", i + 1, j + 1);
+                                "Both values are equal in non-equivs comparison.", actualIndex + i + 1, expectedIndex + j + 1);
                         }
                         return new ComparisonResult(ComparisonResultType.EQUAL);
                     }
                 }
             }
-            actualIndex++;
-            expectedIndex++;
+
+            // set indices to the next container/event stream
+            actualIndex = actualIndex + actualEvent.ionValue.length + 1;
+            expectedIndex = expectedIndex + expectedEvent.ionValue.length + 1;
         }
         return new ComparisonResult(comparisonType == ComparisonType.NON_EQUIVS ? ComparisonResultType.NOT_EQUAL : ComparisonResultType.EQUAL);
     }

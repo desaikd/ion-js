@@ -104,9 +104,11 @@ export class Process {
                 writeEvents = this.collectInputStreamEvents(writeEvents, eventStream);
             }
         } catch (EventStreamError) {
-            writeEvents = EventStreamError.eventstream;
+            if(EventStreamError.eventstream) {
+                writeEvents.push(...EventStreamError.eventstream);
+            }
             if(EventStreamError.type === "READ") {
-                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), EventStreamError.index).writeErrorReport();
+                new IonCliError(ErrorType.READ, path, EventStreamError.message, args.getErrorReportFile(), writeEvents.length).writeErrorReport();
             }
             else if(EventStreamError.type === "WRITE") {
                 new IonCliError(ErrorType.WRITE, path, EventStreamError.message, args.getErrorReportFile()).writeErrorReport();
