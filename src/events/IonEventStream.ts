@@ -300,7 +300,7 @@ export class IonEventStream {
                 }
 
                 case 'field_name': {
-                    currentEvent[fieldName] = this.parseFieldName();
+                    currentEvent[fieldName] = this.resolveFieldNameFromSerializedSymbolToken();
                     break;
                 }
 
@@ -489,8 +489,11 @@ export class IonEventStream {
         return this.reader.value();
     }
 
-    // parse the field name (Symbol Token) into text/symbol
-    private parseFieldName(): string | null {
+    /** Parse the field name (Symbol Token) into text/symbol
+     *  example: {event_type: SCALAR, ion_type: INT, field_name: {text:"foo"}, value_text: "1", value_binary: [0x21, 0x01], depth:1}
+     *  for more information: https://github.com/amzn/ion-test-driver#symboltoken-1
+     */
+    private resolveFieldNameFromSerializedSymbolToken(): string | null {
         if(this.reader.isNull()) {
             return null;
         }
