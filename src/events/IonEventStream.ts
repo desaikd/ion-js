@@ -25,6 +25,10 @@ import {ComparisonResultType} from "../ComparisonResult";
 import {ComparisonResult} from "../ComparisonResult";
 import {EventStreamError} from "./EventStreamError";
 
+// constants to be used for EventStream error
+const READ = "READ";
+const WRITE = "WRITE";
+
 export class IonEventStream {
     events: IonEvent[];
     private reader: Reader;
@@ -125,7 +129,7 @@ export class IonEventStream {
             writer.close();
         } catch(error) {
             // This Error will be used by the test-driver to differentiate errors using error types.
-            throw new EventStreamError("WRITE" , error.message , this.events.length, this.events);
+            throw new EventStreamError(WRITE , error.message , this.events.length, this.events);
         }
 
     }
@@ -247,7 +251,7 @@ export class IonEventStream {
             }
         } catch (error) {
             // This Error will be used by the test-driver to differentiate errors using error types.
-            throw new EventStreamError("READ" , error.message , this.events.length, this.events);
+            throw new EventStreamError(READ , error.message , this.events.length, this.events);
         }
     }
 
@@ -485,6 +489,7 @@ export class IonEventStream {
         return this.reader.value();
     }
 
+    // parse the field name (Symbol Token) into text/symbol
     private parseFieldName(): string | null {
         if(this.reader.isNull()) {
             return null;
