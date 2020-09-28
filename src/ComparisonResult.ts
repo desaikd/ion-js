@@ -13,29 +13,33 @@
  * permissions and limitations under the License.
  */
 
-
 /** Comparison result types for the comparison report
  *  EQUALS: Indicates the input streams are equal
  *  NOT_EQUAL: Indicates the input streams are not equal
  *  ERROR: For all the cases where an error occurs while reading or writing input streams
  */
 export enum ComparisonResultType {
-    EQUAL = "EQUAL",
-    NOT_EQUAL = "NOT_EQUAL",
-    ERROR = "ERROR"
+  EQUAL = "EQUAL",
+  NOT_EQUAL = "NOT_EQUAL",
+  ERROR = "ERROR",
 }
 
 /** comparison result with event index and message **/
 export class ComparisonResult {
-    message: string;
-    result: ComparisonResultType;
-    actualIndex: number;
-    expectedIndex: number;
+  message: string;
+  result: ComparisonResultType;
+  actualIndex: number;
+  expectedIndex: number;
 
-    constructor(result: ComparisonResultType = ComparisonResultType.EQUAL, message: string = "", actualIndex: number = 0, expectedIndex: number = 0) {
-        this.result = result;
-        this.message = message;
-        this.actualIndex = actualIndex;
-        this.expectedIndex = expectedIndex;
-    }
+  constructor(
+    result: ComparisonResultType = ComparisonResultType.EQUAL,
+    message: string = "",
+    actualIndex: number = 0,
+    expectedIndex: number = 0
+  ) {
+    this.result = result;
+    this.message = message;
+    this.actualIndex = actualIndex;
+    this.expectedIndex = expectedIndex;
+  }
 }
