@@ -242,13 +242,8 @@ abstract class AbstractIonEvent implements IonEvent {
     }
     for (let i = 0; i < this.annotations.length; i++) {
       if (this.annotations[i] !== expectedAnnotations[i]) {
-        return new ComparisonResult(
-          ComparisonResultType.NOT_EQUAL,
-          "annotation value doesn't match" +
-            this.annotations[i] +
-            " vs. " +
-            expectedAnnotations[i]
-        );
+    for (let i = 0; i < this.annotations.length; i++) {
+      if (this.annotations[i] !== expectedAnnotations[i])
       }
     }
     return new ComparisonResult(ComparisonResultType.EQUAL);
