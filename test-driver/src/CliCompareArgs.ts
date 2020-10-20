@@ -13,20 +13,19 @@
  * permissions and limitations under the License.
  */
 
-import { asAscii } from "./IonText";
+import {ComparisonType} from "./Compare";
+import {IonCliCommonArgs} from "./CliCommonArgs";
 
-export class Symbol {
-  sid: number;
-  name: string;
+/** CLI arguments for compare structure */
+export class IonCompareArgs extends IonCliCommonArgs{
+    comparisonType : ComparisonType;
 
-  constructor(id: number, val: string) {
-    this.sid = id;
-    this.name = val;
-  }
+    constructor(props) {
+        super(props);
+        this.comparisonType = props["comparison-type"] as ComparisonType;
+    }
 
-  toString(): string {
-    const s =
-      "sym::{id:" + asAscii(this.sid) + ',val:"' + asAscii(this.name) + '"';
-    return s;
-  }
+    getComparisonType(): ComparisonType {
+        return this.comparisonType;
+    }
 }
